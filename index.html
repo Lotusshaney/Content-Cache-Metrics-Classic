@@ -1,0 +1,196 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Content Cache Metrics Classic</title><style>
+:root{--bg:#f5f6f8;--card:#fff;--fg:#1c1f26;--mut:#6b7280;--line:#e5e7eb;--ok:#16a34a;--bad:#dc2626;--warn:#d97706}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#181b22;--fg:#e6e8ec;--mut:#8b93a1;--line:#2a2f3a}}
+*{box-sizing:border-box}body{margin:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--fg)}
+header{display:flex;gap:12px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+h1{font-size:17px;margin:0;flex:1}h2{font-size:13px;margin:0 0 8px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+select{background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+main{padding:20px;max-width:1500px;margin:auto}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
+.charts{grid-template-columns:repeat(auto-fit,minmax(440px,1fr));margin:14px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.kpi .v{font-size:26px;font-weight:650}.kpi .l{color:var(--mut);font-size:12px}
+.servers{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+.srv .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--bad)}.dot.on{background:var(--ok)}
+.srv dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:8px 0 0}dt{color:var(--mut)}dd{margin:0;text-align:right}
+.bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:#3b82f6}
+h2,.srv .top{cursor:pointer;user-select:none}
+h2::before,.srv .top b::before{content:"▾";display:inline-block;width:1.1em;color:var(--mut)}
+.card.min h2::before,.card.min .top b::before{content:"▸"}
+.card.min>:not(h2):not(.top){display:none}.card.min h2{margin-bottom:0}.card.min .top{margin-bottom:0}
+canvas{width:100%;height:190px;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:6px}.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:600}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}#del{background:var(--card);color:var(--bad);border:1px solid var(--bad);border-radius:6px;padding:5px 10px;cursor:pointer}#data{margin-top:14px}.bad{color:var(--bad)}.mut{color:var(--mut)}code{font-size:12px}
+#tip{position:fixed;pointer-events:none;background:#111;color:#fff;font-size:12px;padding:5px 8px;border-radius:6px;display:none;white-space:pre;z-index:9}
+
+.charts{grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}.servers{grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr))}header{flex-wrap:wrap}h2{cursor:default}h2::before{content:none}.srv .top b::before{content:none}.srv .top{cursor:default}.notice{padding:12px 0;color:var(--mut)}
+
+:root{--bg:#f2f2f5;--card:#fff;--panel:#fafafc;--c-cache:#0a84ff;--c-other:#8e44ad;--c-net:#30b8e8}
+@media(prefers-color-scheme:dark){:root{--bg:#0d0e12;--card:#1a1c22;--panel:#14161b}}
+body{background:var(--bg)}
+header{border-bottom:0;background:transparent;backdrop-filter:blur(8px)}
+.card{border:0;border-radius:18px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.panel{background:var(--card);border-radius:18px;padding:18px 20px}
+.panel h3{margin:0;font-size:16px;font-weight:650}.panel h3 small{font-weight:400;color:var(--mut);margin-left:8px;font-size:13px}
+.panel .sub{color:var(--mut);font-size:12px;margin-top:2px}
+.dash{display:grid;gap:14px;grid-template-columns:2fr 1fr 1fr;grid-template-rows:auto auto;margin-bottom:14px}
+.tile{border-radius:18px;padding:16px 18px;color:#fff;position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.tile .t{font-size:13px;font-weight:600;opacity:.92}.tile .v{font-size:28px;font-weight:700;letter-spacing:-.01em}.tile .n{font-size:12px;font-weight:600;opacity:.92}
+.tile.hero{grid-row:span 2;background:linear-gradient(160deg,#2aa0ff,#0a6cf0 70%);padding:22px 26px}
+.hero .big{white-space:nowrap;font-size:clamp(36px,5vw,88px);font-weight:700;letter-spacing:-.03em;line-height:1}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ring{position:relative;width:clamp(100px,12vw,150px);aspect-ratio:1;flex:none}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}.ring div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:24px}.ring div small{font-size:12px;font-weight:600;opacity:.9}
+.split{height:12px;border-radius:6px;background:rgba(255,255,255,.22);display:flex;overflow:hidden;margin:14px 0 8px}.split i{display:block;height:100%}
+.legend3{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;flex-wrap:wrap}
+.tile.teal{background:linear-gradient(160deg,#6fd3f2,#3db5e3)}.tile.green{background:linear-gradient(160deg,#5fd07a,#2fa84f)}
+.tile svg.spark{width:100%;height:34px;display:block}
+.pbar{height:9px;border-radius:5px;background:rgba(255,255,255,.3);overflow:hidden}.pbar i{display:block;height:100%;background:#fff;border-radius:5px}
+.seg{display:flex;gap:2px;margin:6px 0}.vol{margin-bottom:14px}
+.vol canvas{height:260px}.vol .legend{margin:0}
+.vol .hd,.panel .hd{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.trio{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin-bottom:14px}
+.donut{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.donut .c{position:relative;width:150px;height:150px;flex:none}.donut svg{width:100%;height:100%;transform:rotate(-90deg)}
+.donut .c div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:18px}.donut .c small{font-weight:400;color:var(--mut);font-size:12px}
+.key{flex:1;min-width:140px}.key div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:14px}.key span.p{color:var(--mut)}
+.drow{margin:12px 0}.drow .l{display:flex;justify-content:space-between;font-size:14px}.drow .l span+span{color:var(--mut)}.drow .l b{color:var(--fg)}
+.tr{height:9px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:6px}.tr i{display:block;height:100%;background:var(--c-cache);border-radius:5px}
+.srvlist .r{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.srvlist .r:last-child{border:0}.srvlist .r>div:nth-child(2){flex:1;min-width:0}
+.srvlist .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.srvlist svg{width:70px;height:24px}
+.pill{font-size:11px;font-weight:700;border-radius:10px;padding:1px 8px;background:var(--line);color:var(--mut)}.pill.on{background:#d1f5dc;color:#177a35}
+h2.sec{margin:22px 0 10px}.pend{border-left:5px solid #ff9500;margin-bottom:14px}.pend .r{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}.pend .r>div{flex:1;min-width:180px}.pend button{border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:5px 12px;cursor:pointer;font-weight:600}.pend button.ok{background:#0a84ff;border-color:#0a84ff;color:#fff}
+@media(max-width:900px){.dash{grid-template-columns:1fr 1fr}.tile.hero{grid-column:span 2;grid-row:auto}}
+</style></head><body>
+<header><h1>Content Cache Metrics Classic</h1><label>Range <select id="range"><option value="1">1h</option><option value="6">6h</option><option value="24" selected>24h</option><option value="168">7d</option><option value="720">30d</option></select></label><label>Granularity <select id="gran"><option value="auto" selected>Auto</option><option value="hour">Hour</option><option value="6h">6 hours</option><option value="day">Day</option></select></label><label>Server <select id="sel"><option value="">All</option></select></label><span class="mut" id="upd" role="status"></span></header>
+<main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><div id="tip"></div><script>
+const $=id=>document.getElementById(id);
+const PAL=['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4'];
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmtB=n=>n>=1e12?(n/1e12).toFixed(2)+' TB':n>=1e9?(n/1e9).toFixed(2)+' GB':n>=1e6?(n/1e6).toFixed(1)+' MB':n>=1e3?(n/1e3).toFixed(1)+' KB':Math.round(n)+' B';
+const fmtR=n=>{n*=8;return n>=1e9?(n/1e9).toFixed(2)+' Gbps':n>=1e6?(n/1e6).toFixed(1)+' Mbps':n>=1e3?(n/1e3).toFixed(1)+' Kbps':Math.round(n)+' bps'};
+const fmtN=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ago=s=>s<60?s+'s ago':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago';
+let pending=[],PERIOD_HINT=3600,retention=90,servers=[],hist=[],color={},bucket=60;
+const CHARTS=[{t:'Bytes served',k:'served',f:fmtB},{t:'Served from cache',k:'cache',f:fmtB},{t:'Bytes downloaded',k:'downloaded',f:fmtB},{t:'Bytes imported (HTTP + XPC)',k:'uploaded',f:fmtB},{t:'Requests',k:'requests',f:fmtN},{t:'Bandwidth saved',k:'saved',f:fmtB},{t:'Peak throughput',k:'peak',f:fmtR},{t:'Cache hit rate',k:'hit',f:v=>v.toFixed(1)+'%'},{t:'Bytes purged',k:'purged',f:fmtB},{t:'Bytes dropped',k:'dropped',f:fmtB},{t:'Requests rejected: no space',k:'rejected',f:fmtN},{t:'Maximum cache pressure',k:'pressure',f:v=>v.toFixed(0)+'%'}];
+function line(canvas,series,fmt,from,to){
+ const dpr=devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;
+ const g=canvas.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,w,h);
+ const L=56,R=8,T=8,B=20;let max=0;
+ series.forEach(s=>s.pts.forEach(p=>{if(p[1]>max)max=p[1]}));if(!max)max=1;max*=1.1;
+ const X=t=>L+(t-from)/(to-from)*(w-L-R),Y=v=>T+(1-v/max)*(h-T-B);
+ g.font='11px sans-serif';g.fillStyle=css('--mut');g.strokeStyle=css('--line');g.lineWidth=1;
+ for(let i=0;i<=4;i++){const v=max*i/4,y=Y(v);g.beginPath();g.moveTo(L,y);g.lineTo(w-R,y);g.stroke();g.textAlign='right';g.fillText(fmt(v),L-5,y+3)}
+ g.textAlign='center';const span=to-from;
+ for(let i=0;i<=4;i++){const t=from+span*i/4,d=new Date(t*1000);g.fillText(span>172800?d.toLocaleDateString([], {month:'short',day:'numeric'}):d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}),X(t),h-5)}
+ series.forEach(s=>{g.strokeStyle=s.color;g.lineWidth=1.8;
+  const segment=(a,b,dashed=false)=>{g.setLineDash(dashed?[5,4]:[]);g.beginPath();g.moveTo(X(a[0]),Y(a[1]));g.lineTo(X(b[0]),Y(b[1]));g.stroke()};
+  s.pts.forEach((p,i)=>{if(!i)return;const prev=s.pts[i-1];
+   if(p[0]-prev[0]>s.gap){segment(prev,[prev[0],0],true);segment([prev[0],0],[p[0],0],true);segment([p[0],0],p,true)}
+   else segment(prev,p)});
+  // Drop to zero after the final sample; dashed segments are display fill.
+  if(s.pts.length){const last=s.pts[s.pts.length-1];if(last[0]<to){segment(last,[last[0],0],true);segment([last[0],0],[to,0],true)}}
+  g.setLineDash([])});
+ canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect(),t=from+(e.clientX-r.left-L)/(w-L-R)*span;let best=null;
+  series.forEach(s=>s.pts.forEach(p=>{const d=Math.abs(p[0]-t);if(!best||d<best.d)best={d,p,s}}));
+  const tip=$('tip');if(!best||t<from||t>to){tip.style.display='none';return}
+  tip.textContent=`${best.s.name}\n${new Date(best.p[0]*1000).toLocaleString()}\n${fmt(best.p[1])}`;
+  tip.style.display='block';tip.style.left=e.clientX+12+'px';tip.style.top=e.clientY+12+'px'};
+ canvas.onmouseleave=()=>$('tip').style.display='none';
+}
+
+function exportLink(){const q=new URLSearchParams({hours:$('range').value});if($('sel').value)q.set('server',$('sel').value);$('exp').href='/api/export.csv?'+q}
+async function api(method,url,body){const r=await fetch(url,{method,headers:Object.assign({'X-CCM-Action':'1'},body?{'Content-Type':'application/json'}:{}),body:body&&JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||r.status);return d}
+$('ret').onchange=async()=>{try{await api('PUT','/api/settings',{retention_days:Number($('ret').value)});$('datamsg').textContent='Retention saved';refresh()}catch(e){$('datamsg').textContent='Failed: '+e.message;$('ret').value=String(retention)}};
+$('del').onclick=async()=>{if(!confirm('Permanently delete ALL collected metrics and servers? This cannot be undone.'))return;try{const d=await api('DELETE','/api/data?confirm=delete-all');$('datamsg').textContent='Deleted '+fmtN(d.deleted_rows)+' samples';refresh()}catch(e){$('datamsg').textContent='Failed: '+e.message}};
+const NICE=[60,300,900,1800,3600,10800,21600,43200,86400];
+const C=()=>({cache:css('--c-cache'),other:css('--c-other'),net:css('--c-net')});
+function spark(vals){
+ if(vals.length<2)vals=[0,0];const max=Math.max(...vals)||1,n=vals.length-1;
+ const pts=vals.map((v,i)=>[(i/n*100).toFixed(1),(22-v/max*20).toFixed(1)]);
+ return `<svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none"><path d="M0,24 L${pts.map(p=>p.join(',')).join(' L')} L100,24Z" fill="rgba(255,255,255,.28)"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#fff" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function series(rows,from,to,step,f){
+ const start=Math.floor(from/step)*step,n=Math.floor((to-start)/step)+1,a=Array.from({length:n},()=>({t:0,cache:0,other:0,net:0,served:0,requests:0,peak:0}));
+ a.forEach((x,i)=>x.t=start+i*step);
+ rows.forEach(r=>{const i=Math.floor((r.t-start)/step);if(i<0||i>=n)return;const x=a[i];x.cache+=r.cache;x.other+=r.parent+r.peer;x.net+=r.origin;x.served+=r.served;x.requests+=r.requests;x.peak=Math.max(x.peak,r.peak||0)});
+ return a;
+}
+function ring(pct,col,bg,w=10){const r=50-w/2,c=2*Math.PI*r;return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="${bg}" stroke-width="${w}"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c*Math.max(0,Math.min(1,pct))} ${c}"/></svg>`}
+function volume(a,from,to,step){
+ const canvas=$('vol'),dpr=devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;
+ const g=canvas.getContext('2d');g.scale(dpr,dpr);g.clearRect(0,0,w,h);
+ const col=C(),L=8,R=62,T=10,B=24;let max=0;a.forEach(x=>max=Math.max(max,x.cache+x.other+x.net));if(!max)max=1;max*=1.1;
+ const Y=v=>T+(1-v/max)*(h-T-B),slot=(w-L-R)/a.length,bw=Math.max(2,slot*.7);
+ g.font='12px -apple-system,sans-serif';g.strokeStyle=css('--line');g.fillStyle=css('--mut');g.lineWidth=1;g.textAlign='left';
+ for(let i=0;i<=4;i++){const v=max*i/4,y=Math.round(Y(v))+.5;g.beginPath();g.moveTo(L,y);g.lineTo(w-R+6,y);g.stroke();g.fillText(i?fmtB(v):'0',w-R+10,y+4)}
+ const rr=(x,y,ww,hh,r)=>{r=Math.min(r,ww/2,hh);g.beginPath();g.moveTo(x,y+hh);g.lineTo(x,y+r);g.quadraticCurveTo(x,y,x+r,y);g.lineTo(x+ww-r,y);g.quadraticCurveTo(x+ww,y,x+ww,y+r);g.lineTo(x+ww,y+hh);g.closePath();g.fill()};
+ a.forEach((x,i)=>{const bx=L+i*slot+(slot-bw)/2;let y0=Y(0);
+  [['cache',col.cache],['other',col.other],['net',col.net]].forEach(([k,c])=>{if(!x[k])return;const hh=(x[k]/max)*(h-T-B);g.fillStyle=c;if(k==='net'||(k==='other'&&!x.net)||(k==='cache'&&!x.other&&!x.net))rr(bx,y0-hh,bw,hh,4);else g.fillRect(bx,y0-hh,bw,hh);y0-=hh})});
+ g.fillStyle=css('--mut');g.textAlign='center';const labels=Math.min(7,a.length),span=to-from;
+ for(let k=0;k<labels;k++){const i=Math.round(k*(a.length-1)/Math.max(1,labels-1)),t=a[i].t,d=new Date(t*1000);g.fillText(span>172800?d.toLocaleDateString([],{month:'short',day:'numeric'}):span>86400?d.toLocaleDateString([],{weekday:'short',hour:'2-digit'}):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),L+i*slot+slot/2,h-6)}
+ canvas.onmousemove=e=>{const r=canvas.getBoundingClientRect(),i=Math.floor((e.clientX-r.left-L)/slot),tip=$('tip');if(i<0||i>=a.length){tip.style.display='none';return}
+  const x=a[i];tip.textContent=`${new Date(x.t*1000).toLocaleString()}\nFrom cache: ${fmtB(x.cache)}\nFrom other caches: ${fmtB(x.other)}\nFrom the internet: ${fmtB(x.net)}`;tip.style.display='block';tip.style.left=e.clientX+12+'px';tip.style.top=e.clientY+12+'px'};
+ canvas.onmouseleave=()=>$('tip').style.display='none';
+}
+function dashboardUI(vis,selected,from,to){
+ const sum=k=>vis.reduce((a,s)=>a+(s.totals[k]||0),0),pct=(a,b)=>b?a/b:0,col=C();
+ const rows=hist.filter(r=>!selected||r.guid===selected);
+ const span=to-from,step=NICE.find(n=>n>=Math.max(bucket,span/48))||86400,a=series(rows,from,to,step);
+ const served=sum('served'),cache=sum('cache'),other=sum('parent')+sum('peer'),net=sum('origin'),eff=pct(cache,served);
+ const pressure=vis.reduce((m,s)=>Math.max(m,s.totals.pressure||0),0);
+ const peakRow=rows.reduce((b,r)=>(!b||(r.peak||0)>(b.peak||0))?r:b,null),peak=peakRow?peakRow.peak:0;
+ const share=v=>served?(100*v/served).toFixed(2)+'%':'0%';
+ $('dash').innerHTML=`<div class="tile hero"><div><div class="top"><div><div class="t" style="font-size:18px">Bandwidth saved</div><div class="big">${fmtB(sum('saved')).replace(/^(\S+) (\S+)$/,'$1 <span style="font-size:.6em">$2</span>')}</div></div><div class="ring">${ring(eff,'#fff','rgba(255,255,255,.28)',9)}<div>${(eff*100).toFixed(1)}%<small>efficiency</small></div></div></div></div><div><div class="split"><i style="width:${share(cache)};background:#fff"></i><i style="width:${share(other)};background:#d9b8ff"></i><i style="width:${share(net)};background:rgba(255,255,255,.5)"></i></div><div class="legend3"><span>${fmtB(cache)} from cache</span><span>${fmtB(other)} from other caches</span><span>${fmtB(net)} from the internet</span></div></div></div>
+ <div class="tile teal"><div class="t">Data served</div><div class="v">${fmtB(served)}</div>${spark(a.map(x=>x.served))}<div class="n">${fmtN(sum('requests'))} requests</div></div>
+ <div class="tile teal"><div class="t">Device requests</div><div class="v">${fmtN(sum('requests'))}</div>${spark(a.map(x=>x.requests))}<div class="n">on ${vis.length} caching server${vis.length===1?'':'s'}</div></div>
+ <div class="tile green"><div class="t">Cache pressure</div><div class="v">${pressure}%</div><div class="pbar"><i style="width:${pressure}%"></i></div><div class="n">${fmtN(sum('rejected'))} requests rejected for no space</div></div>
+ <div class="tile green"><div class="t">Peak throughput</div><div class="v">${fmtR(peak)}</div>${spark(a.map(x=>x.peak))}<div class="n">${peakRow?esc(new Date(peakRow.t*1000).toLocaleString([],{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})):'no samples'}</div></div>`;
+ volume(a,from,to,step);
+ $('volint').textContent=(step>=86400?'daily':step>=3600?step/3600+'-hour':Math.round(step/60)+'-minute')+' intervals';
+ $('vollegend').innerHTML=[['From cache',col.cache],['From other caches',col.other],['From the internet',col.net]].map(([l,c])=>`<span><i class="sw" style="background:${c}"></i>${l}</span>`).join('');
+ // trio
+ const palette=['#34c759','#ff9500','#5ac8fa','#af52de'],parts=[['Cache','cache'],['Origin','origin'],['Parent','parent'],['Peer','peer']].map(([l,k],i)=>[l,sum(k),palette[i]]);
+ let off=0;const r=45,c=2*Math.PI*r,arcs=parts.map(([l,v,col])=>{const f=pct(v,served),d=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-dasharray="${Math.max(0,c*f-1)} ${c}" stroke-dashoffset="${-off}"/>`;off+=c*f;return d}).join('');
+ const dests=[['Client devices','clients'],['Child caches','children'],['Peer caches','peers']],dt=sum('clients')+sum('children')+sum('peers');
+ const state=s=>!s.latest?'Offline':s.online?(Date.now()/1000-s.latest>PERIOD_HINT?'Idle':'Active'):(s.age>PERIOD_HINT*24?'Offline':'Stale');
+ $('trio').innerHTML=`<div class="panel"><div class="hd"><h3>Traffic by source</h3></div><div class="donut"><div class="c"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="10"/>${arcs}</svg><div>${fmtB(served)}<small>served</small></div></div><div class="key">${parts.map(([l,v,col])=>`<div><span><i class="sw" style="background:${col}"></i>${l}</span><span class="p">${(100*pct(v,served)).toFixed(0)}%</span></div>`).join('')}</div></div></div>
+ <div class="panel"><div class="hd"><h3>Traffic destinations</h3></div>${dests.map(([l,k])=>`<div class="drow"><div class="l"><span>${l}</span><span>${dt?(100*sum(k)/dt).toFixed(1):'0.0'}% · <b>${fmtB(sum(k))}</b></span></div><div class="tr"><i style="width:${(100*pct(sum(k),dt)).toFixed(1)}%"></i></div></div>`).join('')}</div>
+ <div class="panel srvlist"><div class="hd"><h3>Servers <small>${vis.filter(s=>s.online).length} of ${vis.length} reporting</small></h3></div>${vis.map(s=>{const v=series(hist.filter(r=>r.guid===s.guid),from,to,step).map(x=>x.served);return `<div class="r"><span class="dot ${s.online?'on':''}"></span><div><div class="nm">${esc(s.hostname)}</div><div class="mut">${state(s)} · peak ${fmtR(s.totals.peak||0)}</div></div>${spark(v).replace('class="spark"','class="spark" style="width:70px;height:24px"').replace(/#fff/g,'var(--c-cache)').replace(/rgba\(255,255,255,\.28\)/,'rgba(10,132,255,.15)')}</div>`}).join('')||'<div class="mut">No servers yet</div>'}</div>`;
+}
+
+function renderPending(){
+ $('pending').innerHTML=pending.length?`<div class="panel pend"><h3>Servers awaiting approval <small>they connected with the enrollment token; data is ignored until you approve</small></h3>${pending.map(p=>`<div class="r"><div><b>${esc(p.hostname)}</b><div class="mut">${esc(p.guid)} · ${esc(p.source_ip)} · ${p.status==='rejected'?'rejected':'last tried '+esc(new Date(p.received*1000).toLocaleString())}</div></div><button class="ok" data-act="approve" data-guid="${esc(p.guid)}">Approve</button>${p.status==='rejected'?'':`<button data-act="reject" data-guid="${esc(p.guid)}">Reject</button>`}</div>`).join('')}</div>`:'';
+}
+$('pending').onclick=async e=>{const b=e.target.closest('button[data-act]');if(!b)return;try{await api('POST','/api/'+b.dataset.act+'?server='+encodeURIComponent(b.dataset.guid));refresh()}catch(err){alert('Failed: '+err.message)}};
+function render(){
+ renderPending();
+ exportLink();
+ const selected=$('sel').value,vis=servers.filter(s=>!selected||s.guid===selected);
+ const _to=Math.floor(Date.now()/1000);dashboardUI(vis,selected,_to-Number($('range').value)*3600,_to);
+ const sum=k=>vis.reduce((a,s)=>a+(s.totals[k]||0),0),hit=(a,b)=>b?(100*a/b).toFixed(1)+'%':'–';
+ const pressure=vis.reduce((a,s)=>Math.max(a,s.totals.pressure||0),0);
+ $('servers').innerHTML=vis.map(s=>`<div class="card srv"><div class="top"><b><span class="dot ${s.online?'on':''}"></span>${esc(s.hostname)}</b><span class="mut">${ago(s.age)}</span></div><div class="mut">${esc(s.guid)} · ${esc(s.source_ip)}</div><dl><dt>Upload status</dt><dd>${s.online?'Recent':'Overdue'}</dd><dt>Latest sample</dt><dd>${s.latest?esc(new Date(s.latest*1000).toLocaleString()):'No samples'}</dd><dt>Samples in range</dt><dd>${fmtN(s.totals.samples)}</dd><dt>Served</dt><dd>${fmtB(s.totals.served||0)}</dd><dt>Cache hit rate</dt><dd>${hit(s.totals.cache,s.totals.served)}</dd><dt>Bandwidth saved</dt><dd>${fmtB(s.totals.saved||0)}</dd><dt>Peak throughput</dt><dd>${fmtR(s.totals.peak||0)}</dd><dt>Requests</dt><dd>${fmtN(s.totals.requests)}</dd></dl></div>`).join('')||'<div class="card">No uploads received yet. PUT a CSV to /api/metrics with an X-Server-ID header.</div>';
+ const to=Math.floor(Date.now()/1000),from=to-Number($('range').value)*3600;
+ CHARTS.forEach((c,i)=>{
+  const by={};hist.filter(r=>!selected||r.guid===selected).forEach(r=>{const v=c.k==='hit'?(r.served?100*r.cache/r.served:null):r[c.k];if(v!=null)(by[r.guid]??=[]).push([Math.max(from,r.t),v])});
+  const series=Object.entries(by).map(([g,pts])=>({name:servers.find(s=>s.guid===g)?.hostname||g,color:color[g],pts,gap:Math.max(1,bucket)*1.5}));
+  line($('c'+i),series,c.f,from,to);
+  $('l'+i).innerHTML=series.map(s=>`<span><b style="background:${s.color}"></b>${esc(s.name)}</span>`).join('')+(series.length?'<span>Solid: reported · Dashed: no data (shown as zero)</span>':'No samples in this range');
+ });
+}
+async function refresh(){
+ try{
+  const response=await fetch('/api/dashboard?hours='+$('range').value+'&bucket='+$('gran').value);if(!response.ok)throw new Error('Server returned '+response.status);
+  const data=await response.json();servers=data.servers;hist=data.history;bucket=data.bucket;retention=data.retention_days;PERIOD_HINT=data.period||3600;pending=data.pending||[];$('ret').value=String(retention);
+  servers.forEach(s=>color[s.guid]??=PAL[Object.keys(color).length%PAL.length]);
+  const current=$('sel').value;$('sel').innerHTML='<option value="">All</option>'+servers.map(s=>`<option value="${esc(s.guid)}">${esc(s.hostname)}</option>`).join('');
+  $('sel').value=servers.some(s=>s.guid===current)?current:'';render();
+  $('upd').textContent='Updated '+new Date().toLocaleTimeString()+' · buckets '+(bucket>=3600?bucket/3600+'h':Math.round(bucket/60)+'m');
+ }catch(e){$('upd').textContent='Refresh failed: '+e.message}
+}
+$('charts').innerHTML=CHARTS.map((c,i)=>`<div class="card"><h2>${c.t}</h2><canvas id="c${i}" role="img" aria-label="${c.t}"></canvas><div class="legend" id="l${i}"></div></div>`).join('');
+$('range').onchange=refresh;$('gran').onchange=refresh;$('sel').onchange=render;addEventListener('resize',render);refresh();setInterval(refresh,15000);
+</script></body></html>

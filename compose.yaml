@@ -1,0 +1,49 @@
+services:
+  ccmon-classic:
+    image: python:3.13-slim
+    working_dir: /app
+    command:
+      - python
+      - -u
+      - server.py
+      - --host
+      - "${CCM_HOST:-0.0.0.0}"
+      - --port
+      - "${CCM_PORT:-8080}"
+      - --db
+      - "${CCM_DB:-/data/ccmon.db}"
+      - --timezone
+      - "${CCM_TIMEZONE:-UTC}"
+      - --period
+      - "${CCM_PERIOD:-3600}"
+      - --retention-days
+      - "${CCM_RETENTION_DAYS:-90}"
+    environment:
+      CCM_HOST: "${CCM_HOST:-0.0.0.0}"
+      CCM_PORT: "${CCM_PORT:-8080}"
+      CCM_ENROLL_TOKEN: "${CCM_ENROLL_TOKEN:-}"
+    ports:
+      - "${CCMON_PORT:-8080}:${CCM_PORT:-8080}"
+    volumes:
+      - type: bind
+        source: ./server.py
+        target: /app/server.py
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./index.html
+        target: /app/index.html
+        read_only: true
+        bind:
+          create_host_path: false
+      - ccmon-classic-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os, urllib.request; host = os.environ['CCM_HOST']; port = os.environ['CCM_PORT']; host = '127.0.0.1' if host == '0.0.0.0' else host; urllib.request.urlopen(f'http://{host}:{port}/', timeout=3).close()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  ccmon-classic-data:
