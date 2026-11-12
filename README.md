@@ -1,5 +1,7 @@
 # Content Cache Metrics Classic
 
+![](media/screenshot.png)
+
 This is a monitoring platform for Apples Content Caching that works on Pre macOS 27 or Non DDM managed macOS 27 Content Caching servers.
 
 If you have DDM and macOS27 then look at Content Cache Metrics instead.
