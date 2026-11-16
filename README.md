@@ -143,7 +143,7 @@ Use the **Customise** dropdown in the dashboard's top bar to change its appearan
 
 | Option | What it does |
 | --- | --- |
-| **Dashboard colours** | Change the colours used by summary tiles, traffic charts and server chart lines. Changes apply immediately. Choose **Reset colours** in the dialog to restore the built-in palette. |
+| **Dashboard colours** | Pick a theme or change individual colours used by summary tiles, traffic charts and server chart lines. Changes apply immediately. Choose **Reset colours** in the dialog to restore the built-in palette. |
 | **Reset panel layout** | Restore the original panel order. |
 | **Export settings…** | Download `content-cache-dashboard-settings.json` with your colour overrides and panel order. |
 | **Import settings…** | Open an exported settings file to replace your current colours and panel order. |
@@ -151,6 +151,32 @@ Use the **Customise** dropdown in the dashboard's top bar to change its appearan
 Drag a summary tile, traffic panel, server card or detailed chart anywhere on its surface and drop it onto another panel in the same section. You can also focus a panel with **Tab** and move it with the arrow keys.
 
 Colours and panel order are saved in the current browser. Use the JSON settings file to transfer them to another browser. To download collected metrics, use **Export CSV** in the **Data** panel.
+
+#### Add themes to the dropdown
+
+To make themes available to dashboard users, create a `themes/` folder next to
+`server.py` and copy exported settings JSON files into it. You can put extracted
+theme packs in subfolders. Open **Customise → Dashboard colours** and choose a
+file from the **Theme** dropdown. Each folder has its own section, with nested
+folders shown by their relative path. Files directly in `themes/` appear under
+**General**. The list refreshes when you open the dialog.
+
+```text
+server.py
+themes/
+├── office.json
+└── TV/
+    └── Action/
+        ├── airwolf.json
+        └── knight-rider.json
+```
+
+In this example, **General** contains `office`, and **TV / Action** contains
+`airwolf` and `knight rider`.
+
+Applying a theme replaces the current colour overrides and preserves panel
+order. Docker Compose mounts `./themes` automatically. With `docker run`, create
+the folder and add `--mount "type=bind,src=$PWD/themes,dst=/app/themes,readonly"`.
 
 ### Fixed upload limits
 
@@ -320,6 +346,7 @@ All paths are relative to the receiver, for example `http://dashboard-host:8080`
 | `POST` | `/api/metrics` | Upload a raw CSV export. Requires the updated receiver. |
 | `PUT` | `/api/metrics` | Upload the same CSV format; equivalent to POST. |
 | `GET` | `/api/dashboard?hours=24` | Retrieve server details, totals and bucketed history as JSON. |
+| `GET` | `/api/themes` | List available themes with their names, relative folders and colour overrides. |
 | `POST` | `/api/approve?server=ID`, `/api/reject?server=ID` | Approve or reject a pending server (needs `X-CCM-Action: 1`). |
 | `GET` | `/api/export.csv` | Download stored samples as CSV; see “Export, retention and deletion”. |
 | `GET` / `PUT` | `/api/settings` | Read or change retention. |

@@ -7,6 +7,7 @@ import io
 import json
 import math
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -365,12 +366,42 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(400, {'error': str(e)})
         if u.path == '/api/settings':
             return self.send(200, {'retention_days': RETENTION_DAYS})
+        if u.path == '/api/themes':
+            return self.send(200, list_themes(), headers=[('Cache-Control', 'no-store')])
         if u.path == '/api/dashboard':
             try:
                 return self.send(200, dashboard(parse_qs(u.query)))
             except ValueError as e:
                 return self.send(400, {'error': str(e)})
         self.send(404, {'error': 'not found'})
+
+
+def list_themes():
+    folder = HERE / 'themes'
+    themes = []
+    paths = sorted(folder.rglob('*.json'), key=lambda path: str(path).casefold())
+    for path in paths:
+        if not path.is_file() or not path.resolve().is_relative_to(folder.resolve()):
+            continue
+        try:
+            theme = json.loads(path.read_text(encoding='utf-8-sig'))
+        except (OSError, UnicodeError, ValueError):
+            continue
+        if not isinstance(theme, dict) or theme.get('version') != 1:
+            continue
+        colours = theme.get('colours')
+        if not isinstance(colours, dict) or not colours or any(
+            not isinstance(value, str) or not re.fullmatch(r'#[0-9A-Fa-f]{6}', value)
+            for value in colours.values()
+        ):
+            continue
+        relative = path.relative_to(folder)
+        themes.append({
+            'name': relative.stem.replace('-', ' ').replace('_', ' '),
+            'folder': relative.parent.as_posix() if relative.parent.parts else '',
+            'colours': colours,
+        })
+    return {'themes': themes}
 
 
 def prune_loop():

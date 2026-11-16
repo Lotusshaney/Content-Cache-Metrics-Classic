@@ -37,6 +37,7 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      - ./themes:/app/themes:ro
       - ccmon-classic-data:/data
     healthcheck:
       test: ["CMD", "python", "-c", "import os, urllib.request; host = os.environ['CCM_HOST']; port = os.environ['CCM_PORT']; host = '127.0.0.1' if host == '0.0.0.0' else host; urllib.request.urlopen(f'http://{host}:{port}/', timeout=3).close()"]

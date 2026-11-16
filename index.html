@@ -74,7 +74,7 @@ h2.sec{margin:22px 0 10px}.pend{border-left:5px solid #ff9500;margin-bottom:14px
 #customise-status:empty{display:none}
 </style></head><body>
 <header><h1>Content Cache Metrics Classic</h1><label>Range <select id="range"><option value="1">1h</option><option value="6">6h</option><option value="24" selected>24h</option><option value="168">7d</option><option value="720">30d</option></select></label><label>Granularity <select id="gran"><option value="auto" selected>Auto</option><option value="hour">Hour</option><option value="6h">6 hours</option><option value="day">Day</option></select></label><label>Server <select id="sel"><option value="">All</option></select></label><select id="customise" aria-label="Customise"><option value="" selected disabled hidden>Customise</option><option value="colours">Dashboard colours</option><option value="reset">Reset panel layout</option><option value="export">Export settings…</option><option value="import">Import settings…</option></select><span id="customise-status" class="mut" role="status"></span><span class="mut" id="upd" role="status"></span></header>
-<main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><dialog class="panel" id="colours" aria-labelledby="colour-title"><h3 id="colour-title">Dashboard colours</h3><div id="colour-inputs"></div><form method="dialog"><button type="button" id="reset-colours">Reset colours</button> <button id="close-colours">Done</button></form></dialog><dialog class="panel" id="import-settings" aria-labelledby="import-title"><h3 id="import-title">Import dashboard settings</h3><p><label for="import-customisation">Choose an exported dashboard settings file</label></p><p><input type="file" id="import-customisation" accept=".json,application/json"></p><form method="dialog"><button id="cancel-import">Cancel</button></form></dialog><div id="tip"></div><script>
+<main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><dialog class="panel" id="colours" aria-labelledby="colour-title"><h3 id="colour-title">Dashboard colours</h3><p><label>Theme <select id="theme" disabled><option value="">Choose a theme</option></select></label></p><p id="theme-status" class="mut" role="status" hidden></p><div id="colour-inputs"></div><form method="dialog"><button type="button" id="reset-colours">Reset colours</button> <button id="close-colours">Done</button></form></dialog><dialog class="panel" id="import-settings" aria-labelledby="import-title"><h3 id="import-title">Import dashboard settings</h3><p><label for="import-customisation">Choose an exported dashboard settings file</label></p><p><input type="file" id="import-customisation" accept=".json,application/json"></p><form method="dialog"><button id="cancel-import">Cancel</button></form></dialog><div id="tip"></div><script>
 const $=id=>document.getElementById(id);
 const PAL=['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4'];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -390,13 +390,63 @@ settingsFile.onchange=async()=>{
   settingsStatus.textContent='Settings applied for this session. Browser storage is unavailable.';
  }
 };
+const themeSelect=$('theme');
+const themeStatus=$('theme-status');
+let availableThemes=[];
+async function loadThemes(){
+ themeSelect.replaceChildren(new Option('Choose a theme',''));
+ themeSelect.disabled=true;
+ themeStatus.hidden=false;
+ themeStatus.textContent='Loading themes…';
+ try{
+  const response=await fetch('/api/themes');
+  if(!response.ok)throw new Error('Could not load themes');
+  const data=await response.json();
+  availableThemes=data.themes.map(theme=>({
+   name:theme.name,
+   folder:theme.folder||'',
+   colours:Object.fromEntries(colourOptions
+    .filter(([key])=>Object.hasOwn(theme.colours,key))
+    .map(([key])=>[key,theme.colours[key]]))
+  })).filter(theme=>Object.keys(theme.colours).length);
+  const sections=new Map();
+  availableThemes.forEach((theme,index)=>{
+   if(!sections.has(theme.folder)){
+    const section=document.createElement('optgroup');
+    section.label=theme.folder.replace(/\//g,' / ')||'General';
+    sections.set(theme.folder,section);
+   }
+   sections.get(theme.folder).append(new Option(theme.name,String(index)));
+  });
+  for(const folder of [...sections.keys()].sort((a,b)=>a.localeCompare(b))){
+   themeSelect.append(sections.get(folder));
+  }
+  themeSelect.disabled=!availableThemes.length;
+  themeStatus.hidden=availableThemes.length>0;
+  themeStatus.textContent=availableThemes.length?'':'No themes found. Add settings JSON files to the server’s themes folder.';
+ }catch{
+  themeStatus.textContent='Could not load themes from the receiver.';
+ }
+}
+themeSelect.onchange=()=>{
+ if(themeSelect.value==='')return;
+ const theme=availableThemes[Number(themeSelect.value)];
+ customColours={...theme.colours};
+ themeSelect.value='';
+ saveColours();
+ themeStatus.hidden=false;
+ themeStatus.textContent='Applied '+theme.name+'.';
+};
 customise.onchange=()=>{
  const action=customise.value;
  customise.value='';
  settingsStatus.textContent='';
  if(action==='export')exportCustomisation();
  if(action==='import')$('import-settings').showModal();
- if(action==='colours')$('colours').showModal();
+ if(action==='colours'){
+  $('colours').showModal();
+  loadThemes();
+ }
  if(action==='reset'){
   panelOrder={};
   try{localStorage.removeItem(panelOrderKey)}catch{}
