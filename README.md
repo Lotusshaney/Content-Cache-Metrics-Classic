@@ -122,6 +122,21 @@ sudo bash contentcache_metrics.sh --csv \
 | API upload time zone | Receiver's `--timezone` (`UTC` by default) | Supply `?timezone=Europe%2FLondon` or `X-Timezone`; a nonempty query value takes precedence. An explicit offset on a timestamp determines that sample's time. |
 | Chart interval (“bucket”) | Automatic; no fixed duration | With `bucket=auto`, width is `max(60, int(hours × 3600 / 500))` seconds; the Granularity menu or `bucket` parameter overrides this with a fixed width. For the default 24-hour window it is 172 seconds, displayed as approximately `3m`. Raw stored samples remain unchanged. No command-line override. |
 
+#### Customise the dashboard
+
+Use the **Customise** dropdown in the dashboard's top bar to change its appearance or transfer your preferences.
+
+| Option | What it does |
+| --- | --- |
+| **Dashboard colours** | Change the colours used by summary tiles, traffic charts and server chart lines. Changes apply immediately. Choose **Reset colours** in the dialog to restore the built-in palette. |
+| **Reset panel layout** | Restore the original panel order. |
+| **Export settings…** | Download `content-cache-dashboard-settings.json` with your colour overrides and panel order. |
+| **Import settings…** | Open an exported settings file to replace your current colours and panel order. |
+
+Drag a summary tile, traffic panel, server card or detailed chart anywhere on its surface and drop it onto another panel in the same section. You can also focus a panel with **Tab** and move it with the arrow keys.
+
+Colours and panel order are saved in the current browser. Use the JSON settings file to transfer them to another browser. To download collected metrics, use **Export CSV** in the **Data** panel.
+
 ### Fixed upload limits
 
 These values are implemented in code and are not command-line options.

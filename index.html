@@ -38,13 +38,13 @@ header{border-bottom:0;background:transparent;backdrop-filter:blur(8px)}
 .dash{display:grid;gap:14px;grid-template-columns:2fr 1fr 1fr;grid-template-rows:auto auto;margin-bottom:14px}
 .tile{border-radius:18px;padding:16px 18px;color:#fff;position:relative;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
 .tile .t{font-size:13px;font-weight:600;opacity:.92}.tile .v{font-size:28px;font-weight:700;letter-spacing:-.01em}.tile .n{font-size:12px;font-weight:600;opacity:.92}
-.tile.hero{grid-row:span 2;background:linear-gradient(160deg,#2aa0ff,#0a6cf0 70%);padding:22px 26px}
+.tile.hero{grid-row:span 2;background:linear-gradient(160deg,var(--hero-start,#2aa0ff),var(--hero-end,#0a6cf0) 70%);padding:22px 26px}
 .hero .big{white-space:nowrap;font-size:clamp(36px,5vw,88px);font-weight:700;letter-spacing:-.03em;line-height:1}
 .hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .ring{position:relative;width:clamp(100px,12vw,150px);aspect-ratio:1;flex:none}.ring svg{width:100%;height:100%;transform:rotate(-90deg)}.ring div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:24px}.ring div small{font-size:12px;font-weight:600;opacity:.9}
 .split{height:12px;border-radius:6px;background:rgba(255,255,255,.22);display:flex;overflow:hidden;margin:14px 0 8px}.split i{display:block;height:100%}
 .legend3{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;flex-wrap:wrap}
-.tile.teal{background:linear-gradient(160deg,#6fd3f2,#3db5e3)}.tile.green{background:linear-gradient(160deg,#5fd07a,#2fa84f)}
+.tile.teal{background:linear-gradient(160deg,var(--activity-start,#6fd3f2),var(--activity-end,#3db5e3))}.tile.green{background:linear-gradient(160deg,var(--performance-start,#5fd07a),var(--performance-end,#2fa84f))}
 .tile svg.spark{width:100%;height:34px;display:block}
 .pbar{height:9px;border-radius:5px;background:rgba(255,255,255,.3);overflow:hidden}.pbar i{display:block;height:100%;background:#fff;border-radius:5px}
 .seg{display:flex;gap:2px;margin:6px 0}.vol{margin-bottom:14px}
@@ -62,9 +62,19 @@ header{border-bottom:0;background:transparent;backdrop-filter:blur(8px)}
 .pill{font-size:11px;font-weight:700;border-radius:10px;padding:1px 8px;background:var(--line);color:var(--mut)}.pill.on{background:#d1f5dc;color:#177a35}
 h2.sec{margin:22px 0 10px}.pend{border-left:5px solid #ff9500;margin-bottom:14px}.pend .r{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}.pend .r>div{flex:1;min-width:180px}.pend button{border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);padding:5px 12px;cursor:pointer;font-weight:600}.pend button.ok{background:#0a84ff;border-color:#0a84ff;color:#fff}
 @media(max-width:900px){.dash{grid-template-columns:1fr 1fr}.tile.hero{grid-column:span 2;grid-row:auto}}
+#colours{width:min(420px,calc(100% - 32px));max-height:80vh;border:1px solid var(--line);color:var(--fg)}
+#colours::backdrop{background:#0007}
+#colour-inputs{display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0}
+#colour-inputs label{display:flex;align-items:center;gap:6px}
+#close-colours,#reset-colours{font:inherit;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;cursor:pointer}
+[data-move-key]{cursor:grab}
+[data-move-key].panel-dragging{cursor:grabbing}
+.panel-dragging{opacity:.55}
+.panel-drop-target{outline:2px dashed var(--c-cache);outline-offset:-2px}
+#customise-status:empty{display:none}
 </style></head><body>
-<header><h1>Content Cache Metrics Classic</h1><label>Range <select id="range"><option value="1">1h</option><option value="6">6h</option><option value="24" selected>24h</option><option value="168">7d</option><option value="720">30d</option></select></label><label>Granularity <select id="gran"><option value="auto" selected>Auto</option><option value="hour">Hour</option><option value="6h">6 hours</option><option value="day">Day</option></select></label><label>Server <select id="sel"><option value="">All</option></select></label><span class="mut" id="upd" role="status"></span></header>
-<main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><div id="tip"></div><script>
+<header><h1>Content Cache Metrics Classic</h1><label>Range <select id="range"><option value="1">1h</option><option value="6">6h</option><option value="24" selected>24h</option><option value="168">7d</option><option value="720">30d</option></select></label><label>Granularity <select id="gran"><option value="auto" selected>Auto</option><option value="hour">Hour</option><option value="6h">6 hours</option><option value="day">Day</option></select></label><label>Server <select id="sel"><option value="">All</option></select></label><select id="customise" aria-label="Customise"><option value="" selected disabled hidden>Customise</option><option value="colours">Dashboard colours</option><option value="reset">Reset panel layout</option><option value="export">Export settings…</option><option value="import">Import settings…</option></select><input type="file" id="import-customisation" accept=".json,application/json" hidden><span id="customise-status" class="mut" role="status"></span><span class="mut" id="upd" role="status"></span></header>
+<main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><dialog class="panel" id="colours" aria-labelledby="colour-title"><h3 id="colour-title">Dashboard colours</h3><div id="colour-inputs"></div><form method="dialog"><button type="button" id="reset-colours">Reset colours</button> <button id="close-colours">Done</button></form></dialog><div id="tip"></div><script>
 const $=id=>document.getElementById(id);
 const PAL=['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4'];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -73,7 +83,48 @@ const fmtR=n=>{n*=8;return n>=1e9?(n/1e9).toFixed(2)+' Gbps':n>=1e6?(n/1e6).toFi
 const fmtN=n=>Number(n||0).toLocaleString(undefined,{maximumFractionDigits:0});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ago=s=>s<60?s+'s ago':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago';
-let pending=[],PERIOD_HINT=3600,retention=90,servers=[],hist=[],color={},bucket=60;
+let pending=[],PERIOD_HINT=3600,retention=90,servers=[],hist=[],color=Object.create(null),bucket=60;
+const colourOptions=[
+ ['cache','Data volume · From cache','#0a84ff','--c-cache'],
+ ['other','Data volume · From other caches','#8e44ad','--c-other'],
+ ['net','Data volume · From the internet','#30b8e8','--c-net'],
+ ['source-cache','Traffic source · Cache','#34c759'],
+ ['source-origin','Traffic source · Origin','#ff9500'],
+ ['source-parent','Traffic source · Parent','#5ac8fa'],
+ ['source-peer','Traffic source · Peer','#af52de'],
+ ['hero','Bandwidth saved tile','#0a6cf0','--hero-end','--hero-start'],
+ ['activity','Data served and requests tiles','#3db5e3','--activity-end','--activity-start'],
+ ['performance','Pressure and throughput tiles','#2fa84f','--performance-end','--performance-start'],
+ ...PAL.map((value,i)=>['server-'+i,'Server chart colour '+(i+1),value])
+];
+const colourStorageKey='ccm-dashboard-colours';
+let customColours={};
+try{const saved=JSON.parse(localStorage.getItem(colourStorageKey));if(saved&&typeof saved==='object'&&!Array.isArray(saved))customColours=saved}catch{}
+function chosenColour(key,fallback){
+ const value=customColours[key];
+ return typeof value==='string'&&/^#[0-9a-f]{6}$/i.test(value)?value:fallback;
+}
+function applyColours(){
+ const style=document.documentElement.style;
+ for(const [key,,fallback,property,gradientStart] of colourOptions){
+  const value=chosenColour(key,'');
+  const input=$('colour-'+key);
+  if(input)input.value=value||fallback;
+  if(!property)continue;
+  if(value){
+   style.setProperty(property,value);
+   if(gradientStart)style.setProperty(gradientStart,`color-mix(in srgb, ${value}, white 18%)`);
+  }else{
+   style.removeProperty(property);
+   if(gradientStart)style.removeProperty(gradientStart);
+  }
+ }
+}
+function saveColours(){
+ try{localStorage.setItem(colourStorageKey,JSON.stringify(customColours))}catch{}
+ applyColours();
+ render();
+}
 const CHARTS=[{t:'Bytes served',k:'served',f:fmtB},{t:'Served from cache',k:'cache',f:fmtB},{t:'Bytes downloaded',k:'downloaded',f:fmtB},{t:'Bytes imported (HTTP + XPC)',k:'uploaded',f:fmtB},{t:'Requests',k:'requests',f:fmtN},{t:'Bandwidth saved',k:'saved',f:fmtB},{t:'Peak throughput',k:'peak',f:fmtR},{t:'Cache hit rate',k:'hit',f:v=>v.toFixed(1)+'%'},{t:'Bytes purged',k:'purged',f:fmtB},{t:'Bytes dropped',k:'dropped',f:fmtB},{t:'Requests rejected: no space',k:'rejected',f:fmtN},{t:'Maximum cache pressure',k:'pressure',f:v=>v.toFixed(0)+'%'}];
 function line(canvas,series,fmt,from,to){
  const dpr=devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;
@@ -152,7 +203,7 @@ function dashboardUI(vis,selected,from,to){
  $('volint').textContent=(step>=86400?'daily':step>=3600?step/3600+'-hour':Math.round(step/60)+'-minute')+' intervals';
  $('vollegend').innerHTML=[['From cache',col.cache],['From other caches',col.other],['From the internet',col.net]].map(([l,c])=>`<span><i class="sw" style="background:${c}"></i>${l}</span>`).join('');
  // trio
- const palette=['#34c759','#ff9500','#5ac8fa','#af52de'],parts=[['Cache','cache'],['Origin','origin'],['Parent','parent'],['Peer','peer']].map(([l,k],i)=>[l,sum(k),palette[i]]);
+ const parts=[['Cache','cache'],['Origin','origin'],['Parent','parent'],['Peer','peer']].map(([l,k])=>[l,sum(k),chosenColour('source-'+k,colourOptions.find(([key])=>key==='source-'+k)[2])]);
  let off=0;const r=45,c=2*Math.PI*r,arcs=parts.map(([l,v,col])=>{const f=pct(v,served),d=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="10" stroke-dasharray="${Math.max(0,c*f-1)} ${c}" stroke-dashoffset="${-off}"/>`;off+=c*f;return d}).join('');
  const dests=[['Client devices','clients'],['Child caches','children'],['Peer caches','peers']],dt=sum('clients')+sum('children')+sum('peers');
  const state=s=>!s.latest?'Offline':s.online?(Date.now()/1000-s.latest>PERIOD_HINT?'Idle':'Active'):(s.age>PERIOD_HINT*24?'Offline':'Stale');
@@ -165,7 +216,79 @@ function renderPending(){
  $('pending').innerHTML=pending.length?`<div class="panel pend"><h3>Servers awaiting approval <small>they connected with the enrollment token; data is ignored until you approve</small></h3>${pending.map(p=>`<div class="r"><div><b>${esc(p.hostname)}</b><div class="mut">${esc(p.guid)} · ${esc(p.source_ip)} · ${p.status==='rejected'?'rejected':'last tried '+esc(new Date(p.received*1000).toLocaleString())}</div></div><button class="ok" data-act="approve" data-guid="${esc(p.guid)}">Approve</button>${p.status==='rejected'?'':`<button data-act="reject" data-guid="${esc(p.guid)}">Reject</button>`}</div>`).join('')}</div>`:'';
 }
 $('pending').onclick=async e=>{const b=e.target.closest('button[data-act]');if(!b)return;try{await api('POST','/api/'+b.dataset.act+'?server='+encodeURIComponent(b.dataset.guid));refresh()}catch(err){alert('Failed: '+err.message)}};
+const movableGroups=['dash','trio','servers','charts'];
+const panelOrderKey='ccm-panel-order';
+let panelOrder={};
+try{const saved=JSON.parse(localStorage.getItem(panelOrderKey));if(saved&&typeof saved==='object'&&!Array.isArray(saved))panelOrder=saved}catch{}
+let draggedPanel,dropTarget,renderDeferred=false;
+function movePanel(panel,target){
+ if(panel===target||panel.parentElement!==target.parentElement)return;
+ const group=panel.parentElement;
+ const panels=Array.from(group.children);
+ group.insertBefore(panel,panels.indexOf(panel)<panels.indexOf(target)?target.nextSibling:target);
+ const visible=Array.from(group.children,child=>child.dataset.moveKey);
+ const previous=panelOrder[group.id];
+ const remaining=visible.slice();
+ panelOrder[group.id]=(Array.isArray(previous)?previous:[])
+  .map(key=>visible.includes(key)?remaining.shift():key).concat(remaining);
+ try{localStorage.setItem(panelOrderKey,JSON.stringify(panelOrder))}catch{}
+}
+function setupMovablePanels(){
+ for(const id of movableGroups){
+  const group=$(id);
+  const panels=Array.from(group.children);
+  for(const panel of panels){
+   if(panel.dataset.moveKey)continue;
+   const heading=panel.querySelector('.t,h2,h3,.top b');
+   if(!heading)continue;
+   const title=heading.firstChild.nodeType===Node.TEXT_NODE?heading.firstChild.textContent.trim():heading.textContent.trim();
+   panel.dataset.moveKey=id==='servers'?panel.children[1].textContent:title;
+   panel.draggable=true;
+   panel.tabIndex=0;
+   panel.setAttribute('aria-label',title);
+   panel.addEventListener('keydown',event=>{
+    if(event.target!==panel)return;
+    const direction={ArrowLeft:-1,ArrowUp:-1,ArrowRight:1,ArrowDown:1}[event.key];
+    if(!direction)return;
+    event.preventDefault();
+    const target=direction<0?panel.previousElementSibling:panel.nextElementSibling;
+    if(target){movePanel(panel,target);panel.focus()}
+   });
+   panel.addEventListener('dragstart',event=>{
+    draggedPanel=panel;
+    event.dataTransfer.setData('text/plain',title);
+    event.dataTransfer.effectAllowed='move';
+    panel.classList.add('panel-dragging');
+   });
+   panel.addEventListener('dragend',()=>{
+    panel.classList.remove('panel-dragging');
+    dropTarget?.classList.remove('panel-drop-target');
+    draggedPanel=dropTarget=null;
+    if(renderDeferred){renderDeferred=false;render()}
+   });
+   panel.addEventListener('dragover',event=>{
+    if(!draggedPanel||draggedPanel===panel||draggedPanel.parentElement!==group)return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect='move';
+    dropTarget?.classList.remove('panel-drop-target');
+    dropTarget=panel;
+    panel.classList.add('panel-drop-target');
+   });
+   panel.addEventListener('drop',event=>{
+    if(!draggedPanel||draggedPanel.parentElement!==group)return;
+    event.preventDefault();
+    movePanel(draggedPanel,panel);
+   });
+  }
+  const order=panelOrder[id];
+  if(!Array.isArray(order))continue;
+  const positions=new Map(order.map((key,index)=>[key,index]));
+  const sorted=panels.slice().sort((a,b)=>(positions.get(a.dataset.moveKey)??Infinity)-(positions.get(b.dataset.moveKey)??Infinity));
+  if(sorted.some((panel,i)=>panel!==panels[i]))group.append(...sorted);
+ }
+}
 function render(){
+ if(draggedPanel){renderDeferred=true;return}
  renderPending();
  exportLink();
  const selected=$('sel').value,vis=servers.filter(s=>!selected||s.guid===selected);
@@ -176,21 +299,112 @@ function render(){
  const to=Math.floor(Date.now()/1000),from=to-Number($('range').value)*3600;
  CHARTS.forEach((c,i)=>{
   const by={};hist.filter(r=>!selected||r.guid===selected).forEach(r=>{const v=c.k==='hit'?(r.served?100*r.cache/r.served:null):r[c.k];if(v!=null)(by[r.guid]??=[]).push([Math.max(from,r.t),v])});
-  const series=Object.entries(by).map(([g,pts])=>({name:servers.find(s=>s.guid===g)?.hostname||g,color:color[g],pts,gap:Math.max(1,bucket)*1.5}));
+  const series=Object.entries(by).map(([g,pts])=>({name:servers.find(s=>s.guid===g)?.hostname||g,color:chosenColour('server-'+color[g],PAL[color[g]]),pts,gap:Math.max(1,bucket)*1.5}));
   line($('c'+i),series,c.f,from,to);
   $('l'+i).innerHTML=series.map(s=>`<span><b style="background:${s.color}"></b>${esc(s.name)}</span>`).join('')+(series.length?'<span>Solid: reported · Dashed: no data (shown as zero)</span>':'No samples in this range');
  });
+ setupMovablePanels();
 }
 async function refresh(){
  try{
   const response=await fetch('/api/dashboard?hours='+$('range').value+'&bucket='+$('gran').value);if(!response.ok)throw new Error('Server returned '+response.status);
   const data=await response.json();servers=data.servers;hist=data.history;bucket=data.bucket;retention=data.retention_days;PERIOD_HINT=data.period||3600;pending=data.pending||[];$('ret').value=String(retention);
-  servers.forEach(s=>color[s.guid]??=PAL[Object.keys(color).length%PAL.length]);
+  servers.forEach(s=>color[s.guid]??=Object.keys(color).length%PAL.length);
   const current=$('sel').value;$('sel').innerHTML='<option value="">All</option>'+servers.map(s=>`<option value="${esc(s.guid)}">${esc(s.hostname)}</option>`).join('');
   $('sel').value=servers.some(s=>s.guid===current)?current:'';render();
   $('upd').textContent='Updated '+new Date().toLocaleTimeString()+' · buckets '+(bucket>=3600?bucket/3600+'h':Math.round(bucket/60)+'m');
  }catch(e){$('upd').textContent='Refresh failed: '+e.message}
 }
 $('charts').innerHTML=CHARTS.map((c,i)=>`<div class="card"><h2>${c.t}</h2><canvas id="c${i}" role="img" aria-label="${c.t}"></canvas><div class="legend" id="l${i}"></div></div>`).join('');
+for(const [key,label] of colourOptions){
+ const control=document.createElement('label');
+ const input=document.createElement('input');
+ input.type='color';
+ input.id='colour-'+key;
+ input.addEventListener('input',()=>{customColours[key]=input.value;saveColours()});
+ control.append(input,label);
+ $('colour-inputs').append(control);
+}
+const defaultCharts=Array.from($('charts').children);
+const customise=$('customise');
+const settingsFile=$('import-customisation');
+const settingsStatus=$('customise-status');
+function exportCustomisation(){
+ const settings={version:1,colours:customColours,panelOrder};
+ const url=URL.createObjectURL(new Blob([JSON.stringify(settings,null,2)+'\n'],{type:'application/json'}));
+ const link=document.createElement('a');
+ link.href=url;
+ link.download='content-cache-dashboard-settings.json';
+ document.body.append(link);
+ link.click();
+ link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function parseCustomisation(text){
+ const settings=JSON.parse(text);
+ const isRecord=value=>value&&typeof value==='object'&&!Array.isArray(value);
+ if(settings?.version!==1||!isRecord(settings.colours)||!isRecord(settings.panelOrder)){
+  throw new Error('Choose a dashboard settings file exported from Customise.');
+ }
+ const colours={};
+ for(const [key] of colourOptions){
+  if(!Object.hasOwn(settings.colours,key))continue;
+  const value=settings.colours[key];
+  if(typeof value!=='string'||!/^#[0-9a-f]{6}$/i.test(value)){
+   throw new Error('The file contains an invalid colour.');
+  }
+  colours[key]=value;
+ }
+ const order={};
+ for(const group of movableGroups){
+  if(!Object.hasOwn(settings.panelOrder,group))continue;
+  const keys=settings.panelOrder[group];
+  if(!Array.isArray(keys)||keys.some(key=>typeof key!=='string')||new Set(keys).size!==keys.length){
+   throw new Error('The file contains an invalid panel order.');
+  }
+  order[group]=keys;
+ }
+ return {colours,order};
+}
+settingsFile.onchange=async()=>{
+ const file=settingsFile.files[0];
+ settingsFile.value='';
+ if(!file)return;
+ let settings;
+ try{settings=parseCustomisation(await file.text())}
+ catch(error){
+  settingsStatus.textContent='Import failed. '+(error instanceof SyntaxError?'The file is not valid JSON.':error.message);
+  return;
+ }
+ customColours=settings.colours;
+ panelOrder=settings.order;
+ $('charts').append(...defaultCharts);
+ applyColours();
+ render();
+ try{
+  localStorage.setItem(colourStorageKey,JSON.stringify(customColours));
+  localStorage.setItem(panelOrderKey,JSON.stringify(panelOrder));
+  settingsStatus.textContent='Dashboard settings imported.';
+ }catch{
+  settingsStatus.textContent='Settings applied for this session. Browser storage is unavailable.';
+ }
+};
+customise.onchange=()=>{
+ const action=customise.value;
+ customise.value='';
+ settingsStatus.textContent='';
+ if(action==='export')exportCustomisation();
+ if(action==='import')settingsFile.click();
+ if(action==='colours')$('colours').showModal();
+ if(action==='reset'){
+  panelOrder={};
+  try{localStorage.removeItem(panelOrderKey)}catch{}
+  $('charts').append(...defaultCharts);
+  render();
+ }
+};
+$('reset-colours').onclick=()=>{customColours={};saveColours()};
+setupMovablePanels();
+applyColours();
 $('range').onchange=refresh;$('gran').onchange=refresh;$('sel').onchange=render;addEventListener('resize',render);refresh();setInterval(refresh,15000);
 </script></body></html>
