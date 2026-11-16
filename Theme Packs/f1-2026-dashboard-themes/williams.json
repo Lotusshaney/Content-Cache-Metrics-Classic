@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "colours": {
+    "cache": "#0057C8",
+    "other": "#77B7F1",
+    "net": "#102249",
+    "source-cache": "#0057C8",
+    "source-origin": "#77B7F1",
+    "source-parent": "#3C83DC",
+    "source-peer": "#9288AD",
+    "hero": "#003478",
+    "activity": "#0A142C",
+    "performance": "#244F84",
+    "server-0": "#0057C8",
+    "server-1": "#77B7F1",
+    "server-2": "#102249",
+    "server-3": "#3C83DC",
+    "server-4": "#386EA7",
+    "server-5": "#9288AD"
+  },
+  "panelOrder": {}
+}
