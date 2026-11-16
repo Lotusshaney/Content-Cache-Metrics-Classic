@@ -6,6 +6,21 @@ This is a monitoring platform for Apples Content Caching that works on Pre macOS
 
 If you have DDM and macOS27 then look at Content Cache Metrics instead.
 
+## Content Cache Metrics Classic features
+
+| Area | Features |
+| --- | --- |
+| **Live dashboard** | Refreshes every 15 seconds. Filter by cache server and time range, and choose automatic, hourly, six-hourly, or daily chart intervals. |
+| **Cache performance** | Track bandwidth saved, cache hit rate, bytes served and downloaded, peak throughput, requests, cache pressure, and requests rejected due to lack of space. |
+| **Traffic breakdowns** | See how much data came from the local cache, other caches, or the internet, and how much went to client devices, child caches, or peer caches. |
+| **Server monitoring** | Monitor multiple Macs from one dashboard. See when each server last uploaded, whether its upload is overdue, and how its metrics compare with other servers. |
+| **Dashboard customisation** | Change tile and chart colours, drag panels to reorder them within their sections, and reset colours and layout independently. |
+| **Settings and themes** | Save preferences in your browser and import or export colours and panel order as JSON. Theme packs include current and classic F1 liveries, ’80s children’s TV, and ’80s action shows. |
+| **Data management** | Export metrics as CSV, choose automatic retention of 3, 6, or 12 months or keep data forever, and delete collected data from the dashboard. |
+| **Metrics collection** | Use the supplied macOS script for terminal summaries, CSV exports, or direct uploads. The included LaunchDaemon template supports scheduled hourly uploads. Overlapping uploads update existing samples without double-counting. |
+| **Server enrolment** | Optionally require an enrolment token for uploads and approve or reject new cache servers from the dashboard. |
+| **Deployment and integrations** | Run the Python receiver directly or deploy it with Docker or Docker Compose. Access metrics through the JSON API or scrape them with Prometheus. |
+
 Python 3.9+; no extra packages. Keep server.py and index.html together.
 
 Start the receiver:
