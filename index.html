@@ -76,6 +76,26 @@ h2.sec{margin:22px 0 10px}.pend{border-left:5px solid #ff9500;margin-bottom:14px
 <header><h1>Content Cache Metrics Classic</h1><label>Range <select id="range"><option value="1">1h</option><option value="6">6h</option><option value="24" selected>24h</option><option value="168">7d</option><option value="720">30d</option></select></label><label>Granularity <select id="gran"><option value="auto" selected>Auto</option><option value="hour">Hour</option><option value="6h">6 hours</option><option value="day">Day</option></select></label><label>Server <select id="sel"><option value="">All</option></select></label><select id="customise" aria-label="Customise"><option value="" selected disabled hidden>Customise</option><option value="colours">Dashboard colours</option><option value="reset">Reset panel layout</option><option value="export">Export settings…</option><option value="import">Import settings…</option></select><span id="customise-status" class="mut" role="status"></span><span class="mut" id="upd" role="status"></span></header>
 <main><div id="pending"></div><div class="dash" id="dash"></div><div class="panel vol"><div class="hd"><h3>Data volume <small id="volint"></small></h3><div class="legend" id="vollegend"></div></div><canvas id="vol" role="img" aria-label="Data volume by source"></canvas></div><div class="trio" id="trio"></div><h2 class="sec">Servers</h2><div class="grid servers" id="servers"></div><p class="notice">Totals cover the selected range. Traffic charts show bytes per time bucket; requests are counts, not connected clients. Upload status reflects when a CSV was received.</p><h2 class="sec">Detailed charts</h2><div class="grid charts" id="charts"></div><div class="card" id="data"><h2>Data</h2><div class="row"><label>Retention <select id="ret"><option value="90">3 months</option><option value="180">6 months</option><option value="365">12 months</option><option value="0">Forever</option></select></label><a id="exp" href="#" download>Export CSV</a><button id="del" type="button">Delete all data…</button><span class="mut" id="datamsg" role="status"></span></div><p class="mut">Export uses the selected range and server, and can be re-uploaded with <code>?server=ID</code>. Samples older than the retention period are pruned hourly.</p></div></main><dialog class="panel" id="colours" aria-labelledby="colour-title"><h3 id="colour-title">Dashboard colours</h3><p><label>Theme <select id="theme" disabled><option value="">Choose a theme</option></select></label></p><p id="theme-status" class="mut" role="status" hidden></p><div id="colour-inputs"></div><form method="dialog"><button type="button" id="reset-colours">Reset colours</button> <button id="close-colours">Done</button></form></dialog><dialog class="panel" id="import-settings" aria-labelledby="import-title"><h3 id="import-title">Import dashboard settings</h3><p><label for="import-customisation">Choose an exported dashboard settings file</label></p><p><input type="file" id="import-customisation" accept=".json,application/json"></p><form method="dialog"><button id="cancel-import">Cancel</button></form></dialog><div id="tip"></div><script>
 const $=id=>document.getElementById(id);
+const filterStorageKey='ccm-dashboard-filters';
+let preferredServer='';
+try{
+ const saved=JSON.parse(localStorage.getItem(filterStorageKey));
+ if(saved&&typeof saved==='object'){
+  for(const id of ['range','gran']){
+   if(Array.from($(id).options).some(option=>option.value===saved[id])){
+    $(id).value=saved[id];
+   }
+  }
+  if(typeof saved.server==='string')preferredServer=saved.server;
+ }
+}catch{}
+function saveFilters(){
+ try{
+  localStorage.setItem(filterStorageKey,JSON.stringify({
+   range:$('range').value,gran:$('gran').value,server:preferredServer
+  }));
+ }catch{}
+}
 const PAL=['#3b82f6','#f59e0b','#10b981','#ef4444','#8b5cf6','#06b6d4'];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const fmtB=n=>n>=1e12?(n/1e12).toFixed(2)+' TB':n>=1e9?(n/1e9).toFixed(2)+' GB':n>=1e6?(n/1e6).toFixed(1)+' MB':n>=1e3?(n/1e3).toFixed(1)+' KB':Math.round(n)+' B';
@@ -310,7 +330,7 @@ async function refresh(){
   const response=await fetch('/api/dashboard?hours='+$('range').value+'&bucket='+$('gran').value);if(!response.ok)throw new Error('Server returned '+response.status);
   const data=await response.json();servers=data.servers;hist=data.history;bucket=data.bucket;retention=data.retention_days;PERIOD_HINT=data.period||3600;pending=data.pending||[];$('ret').value=String(retention);
   servers.forEach(s=>color[s.guid]??=Object.keys(color).length%PAL.length);
-  const current=$('sel').value;$('sel').innerHTML='<option value="">All</option>'+servers.map(s=>`<option value="${esc(s.guid)}">${esc(s.hostname)}</option>`).join('');
+  const current=preferredServer;$('sel').innerHTML='<option value="">All</option>'+servers.map(s=>`<option value="${esc(s.guid)}">${esc(s.hostname)}</option>`).join('');
   $('sel').value=servers.some(s=>s.guid===current)?current:'';render();
   $('upd').textContent='Updated '+new Date().toLocaleTimeString()+' · buckets '+(bucket>=3600?bucket/3600+'h':Math.round(bucket/60)+'m');
  }catch(e){$('upd').textContent='Refresh failed: '+e.message}
@@ -457,5 +477,8 @@ customise.onchange=()=>{
 $('reset-colours').onclick=()=>{customColours={};saveColours()};
 setupMovablePanels();
 applyColours();
-$('range').onchange=refresh;$('gran').onchange=refresh;$('sel').onchange=render;addEventListener('resize',render);refresh();setInterval(refresh,15000);
+$('range').onchange=()=>{saveFilters();refresh()};
+$('gran').onchange=()=>{saveFilters();refresh()};
+$('sel').onchange=()=>{preferredServer=$('sel').value;saveFilters();render()};
+addEventListener('resize',render);refresh();setInterval(refresh,15000);
 </script></body></html>

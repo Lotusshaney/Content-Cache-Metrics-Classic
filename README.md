@@ -137,6 +137,10 @@ sudo bash contentcache_metrics.sh --csv \
 | API upload time zone | Receiver's `--timezone` (`UTC` by default) | Supply `?timezone=Europe%2FLondon` or `X-Timezone`; a nonempty query value takes precedence. An explicit offset on a timestamp determines that sample's time. |
 | Chart interval (“bucket”) | Automatic; no fixed duration | With `bucket=auto`, width is `max(60, int(hours × 3600 / 500))` seconds; the Granularity menu or `bucket` parameter overrides this with a fixed width. For the default 24-hour window it is 172 seconds, displayed as approximately `3m`. Raw stored samples remain unchanged. No command-line override. |
 
+Range, Granularity and Server selections are saved in the current browser and
+restored when you reload the dashboard. If the saved server is unavailable, the
+dashboard shows all servers until it becomes available again.
+
 #### Customise the dashboard
 
 Use the **Customise** dropdown in the dashboard's top bar to change its appearance or transfer your preferences.
